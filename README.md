@@ -91,183 +91,34 @@ A classe `MatriculaAlunoService` implementa as principais regras acadêmicas da 
 
 ---
 
-## 📡 5. Guia de Requisições (Insomnia / Postman)
+## 📡 5. Requisições (Insomnia / Postman)
+POST PROFESSOR :
 
-Abaixo estão detalhadas todas as requisições que podem ser importadas ou configuradas em sua ferramenta de testes HTTP (**Insomnia**).
+<img width="1908" height="1080" alt="image" src="https://github.com/user-attachments/assets/368ec0ac-f12a-44e0-8257-4236bf6c8f3a" />
 
-### A. CRUD Aluno (`/alunos`)
 
-#### 1. Cadastrar Aluno (`POST /alunos`)
-*   **Corpo da Requisição (JSON):**
-```json
-{
-  "nome": "Artur Medeiros",
-  "cpf": "123.456.789-00",
-  "email": "artur@email.com"
-}
-```
-*   **Resposta Esperada (201 Created):**
-```json
-{
-  "id": 1,
-  "nome": "Artur Medeiros",
-  "cpf": "123.456.789-00",
-  "email": "artur@email.com"
-}
-```
+POST ALUNO :
 
-#### 2. Listar Todos os Alunos (`GET /alunos`)
-*   **Resposta Esperada (200 OK):**
-```json
-[
-  {
-    "id": 1,
-    "nome": "Artur Medeiros",
-    "cpf": "123.456.789-00",
-    "email": "artur@email.com"
-  }
-]
-```
+<img width="1912" height="1080" alt="image" src="https://github.com/user-attachments/assets/1c4ccb94-a4d2-458d-82f7-8f7301fb3a1f" />
 
-#### 3. Buscar Aluno por ID (`GET /alunos/1`)
-*   **Resposta Esperada (200 OK):**
-```json
-{
-  "id": 1,
-  "nome": "Artur Medeiros",
-  "cpf": "123.456.789-00",
-  "email": "artur@email.com"
-}
-```
+POST DISCIPLINA :
 
-#### 4. Atualizar Aluno (`PUT /alunos/1`)
-*   **Corpo da Requisição (JSON):**
-```json
-{
-  "nome": "Artur Medeiros de Souza",
-  "cpf": "123.456.789-00",
-  "email": "artur.novo@email.com"
-}
-```
-*   **Resposta Esperada (200 OK):**
-```json
-{
-  "id": 1,
-  "nome": "Artur Medeiros de Souza",
-  "cpf": "123.456.789-00",
-  "email": "artur.novo@email.com"
-}
-```
+<img width="1921" height="1037" alt="image" src="https://github.com/user-attachments/assets/cd80ea89-b235-4677-810b-a6a319d4fd39" />
 
-#### 5. Deletar Aluno (`DELETE /alunos/1`)
-*   **Resposta Esperada (204 No Content):** (Sem corpo de resposta)
 
----
+POST MATRICULA : 
 
-### B. CRUD Professor (`/professores`)
+<img width="1914" height="1040" alt="image" src="https://github.com/user-attachments/assets/7c58a11f-b8ed-4467-a0ad-910be8ecc6b6" />
 
-#### 1. Cadastrar Professor (`POST /professores`)
-*   **Corpo da Requisição (JSON):**
-```json
-{
-  "nome": "Kelson Almeida",
-  "cpf": "987.654.321-11",
-  "email": "kelson.almeida@uniesp.edu.br"
-}
-```
-*   **Resposta Esperada (201 Created):**
-```json
-{
-  "id": 1,
-  "nome": "Kelson Almeida",
-  "cpf": "987.654.321-11",
-  "email": "kelson.almeida@uniesp.edu.br"
-}
-```
+PATCH NOTA :
 
-#### 2. Listar Todos os Professores (`GET /professores`)
-*   **Resposta Esperada (200 OK)**
+<img width="1902" height="978" alt="image" src="https://github.com/user-attachments/assets/08005d1d-46bf-4dc3-939d-ab111127b0b1" />
 
----
+GET HISTORICO:
 
-### C. CRUD Disciplina (`/disciplinas`)
+<img width="1917" height="1048" alt="image" src="https://github.com/user-attachments/assets/313dc833-ed4e-45bf-a164-a97d34e37eae" />
 
-#### 1. Cadastrar Disciplina (`POST /disciplinas`)
-*   **Corpo da Requisição (JSON):**
-```json
-{
-  "nome": "Desenvolvimento Web com Spring Boot",
-  "cargaHoraria": 80,
-  "professor": {
-    "id": 1
-  }
-}
-```
-*   **Resposta Esperada (201 Created):**
-```json
-{
-  "id": 1,
-  "nome": "Desenvolvimento Web com Spring Boot",
-  "cargaHoraria": 80,
-  "professor": {
-    "id": 1,
-    "nome": "Kelson Almeida",
-    "cpf": "987.654.321-11",
-    "email": "kelson.almeida@uniesp.edu.br"
-  }
-}
-```
 
----
-
-### D. Métodos de Matrícula (`/matriculas`)
-
-#### 1. Efetuar Nova Matrícula (`POST /matriculas`)
-*   **Corpo da Requisição (JSON):**
-```json
-{
-  "aluno": {
-    "id": 1
-  },
-  "disciplina": {
-    "id": 1
-  }
-}
-```
-*   **Resposta Esperada (201 Created):** (Sem corpo de resposta, tabela `matricula_aluno` atualizada com status `MATRICULADO`)
-
-#### 2. Trancar Matrícula (`PATCH /matriculas/trancar/1`)
-*   **Resposta Esperada (204 No Content):** (Altera o status da matrícula ID 1 para `TRANCADO`)
-
-#### 3. Lançar/Atualizar Notas (`PATCH /matriculas/atualizar-notes/1` ou `/matriculas/atualizar-notas/1`)
-*   **Corpo da Requisição (JSON):**
-```json
-{
-  "nota1": 8.5,
-  "nota2": 7.5
-}
-```
-*   **Resposta Esperada (204 No Content):** (Atualiza as notas e altera automaticamente o status para `APROVADO`, pois a média é 8.0)
-
-#### 4. Emitir Histórico Escolar (`GET /matriculas/emitir-historico/1`)
-*   **Resposta Esperada (200 OK):**
-```json
-{
-  "nomeAluno": "Artur Medeiros",
-  "emailAluno": "artur@email.com",
-  "cpfAluno": "123.456.789-00",
-  "disciplinas": [
-    {
-      "nomeDisciplina": "Desenvolvimento Web com Spring Boot",
-      "nomeProfessor": "Kelson Almeida",
-      "nota1": 8.5,
-      "nota2": 7.5,
-      "media": 8.0,
-      "status": "APROVADO"
-    }
-  ]
-}
-```
 
 ---
 
@@ -298,16 +149,3 @@ Graças ao Hibernate configurado com `ddl-auto=update`, as tabelas são criadas 
 | 1       | 1             | 1                  | 8.5   | 7.5   | APROVADO     |
 | 2       | 1             | 2                  | NULL  | NULL  | MATRICULADO  |
 | 3       | 2             | 1                  | 4.0   | 5.0   | REPROVADO    |
-
----
-
-## 🛠️ Como Executar a Aplicação localmente
-
-1.  **Pré-requisitos:** Certifique-se de ter o Docker em execução com o banco de dados PostgreSQL rodando na porta `5438` (ou ajuste as credenciais e porta em `src/main/resources/application.properties`).
-2.  **Compilar e Executar:**
-    Abra a pasta do projeto no seu terminal e execute:
-    ```bash
-    ./mvnw spring-boot:run
-    ```
-3.  **Acessar a API:**
-    A aplicação estará disponível em `http://localhost:8080`. Você pode testar todos os endpoints listados utilizando o Insomnia!
