@@ -1,151 +1,126 @@
 # Aluno Online API 🎓
 
-Este é o projeto **Aluno Online**, uma API REST desenvolvida em **Java 21** com o framework **Spring Boot** e persistência de dados em **PostgreSQL**. O projeto foi estruturado seguindo as melhores práticas de desenvolvimento backend, adotando a arquitetura em camadas e utilizando anotações modernas (como Spring Data JPA e Lombok) para manter o código limpo, legível e de fácil manutenção.
+Este é o projeto **Aluno Online**, uma API REST desenvolvida em **Java 21** com o framework **Spring Boot**, persistência de dados em **MySQL**, versionamento de schema com **Flyway**, autenticação stateless com **Spring Security + JWT** e documentação interativa com **Swagger / OpenAPI 3**.
 
 ---
 
-## 🚀 1. Explicação do Projeto
+## 🚀 1. Visão Geral do Projeto
 
-O **Aluno Online** é um sistema de controle acadêmico simplificado. Ele permite que instituições de ensino gerenciem seus principais pilares operacionais:
-*   **Alunos:** Cadastro e manutenção dos dados básicos de estudantes.
-*   **Professores:** Cadastro de docentes responsáveis pelas disciplinas.
-*   **Disciplinas:** Cadastro de matérias escolares, associando-as ao seu respectivo professor e definindo a carga horária.
-*   **Matrículas (`MatriculaAluno`):** O coração do sistema, responsável por gerenciar a vinculação entre alunos e disciplinas, registrar as notas de avaliações (`nota1` e `nota2`), calcular médias e definir automaticamente a situação acadêmica do estudante (Aprovado ou Reprovado), além de permitir o trancamento de curso.
+O **Aluno Online** é um sistema de controle acadêmico completo e seguro. Ele permite gerenciar os seguintes pilares:
+*   **Autenticação e Segurança (`/auth`):** Cadastro e login com geração e validação de tokens JWT (Bearer Token).
+*   **Alunos (`/alunos`):** Cadastro e manutenção dos dados básicos de estudantes (rotas protegidas).
+*   **Professores (`/professores`):** Cadastro de docentes responsáveis pelas disciplinas (rotas protegidas).
+*   **Disciplinas (`/disciplinas`):** Cadastro de matérias escolares, associando-as ao seu respectivo professor e definindo a carga horária (rotas protegidas).
+*   **Matrículas (`/matriculas`):** Vinculação entre alunos e disciplinas, registro de notas (`nota1` e `nota2`), cálculo automático de médias para aprovação/reprovação, trancamento e emissão de histórico escolar completo (rotas protegidas).
 
 ---
 
-## 🏛️ 2. Arquitetura Utilizada
+## 🏛️ 2. Arquitetura e Tecnologias
 
-A aplicação foi desenvolvida seguindo o padrão de **Arquitetura em Camadas (Tiered Architecture)**, o qual garante uma excelente separação de responsabilidades:
+A aplicação adota a **Arquitetura em Camadas (Tiered Architecture)**:
 
 ```mermaid
 graph TD
-    Client[Cliente / Insomnia] <--> |JSON / HTTP| Controller[Camada Controller]
-    Controller <--> |Chamadas de Métodos| Service[Camada Service / Regras de Negócio]
-    Service <--> |Operações JPA| Repository[Camada Repository / Banco de Dados]
-    Repository <--> |SQL / JDBC| PostgreSQL[(Banco de Dados PostgreSQL)]
-    
-    subgraph DTOs [Objetos de Transferência de Dados]
-        dt1[AtualizarNotasRequestDTO]
-        dt2[HistoricoAlunoResponseDTO]
-        dt3[DisciplinasAlunoResponseDTO]
-    end
-    
-    Service -.-> |Utiliza| DTOs
+    Client[Cliente / Swagger UI / Postman] <--> |JSON / Bearer JWT| SecurityFilter[SecurityFilter & JWT]
+    SecurityFilter <--> |Requisição Autorizada| Controller[Camada Controller]
+    Controller <--> |Chamadas de Serviços| Service[Camada Service / Regras de Negócio]
+    Service <--> |Spring Data JPA| Repository[Camada Repository]
+    Repository <--> |JDBC / MySQL Connector| MySQL[(Banco de Dados MySQL)]
+    Flyway[Flyway Migrations] -.-> |V1 e V2 Schemas| MySQL
 ```
 
-1.  **Camada Model (Entidades):** Representa as tabelas do banco de dados mapeadas através do JPA (Java Persistence API). Localizadas em `br.com.alunoonline.api.model`.
-2.  **Camada Repository:** Interfaces que estendem `JpaRepository`, fornecendo todos os métodos de persistência (CRUD) de forma transparente. Localizadas em `br.com.alunoonline.api.repository`.
-3.  **Camada Service:** Onde reside toda a lógica de negócio do sistema (por exemplo: cálculo de média para aprovação, validação de status de matrícula para trancamento). Localizadas em `br.com.alunoonline.api.service`.
-4.  **Camada Controller:** Porta de entrada da API. Recebe as requisições HTTP, valida os corpos (JSON) e direciona para as regras de negócio adequadas na camada Service. Localizadas in `br.com.alunoonline.api.controller`.
-5.  **Camada DTO (Data Transfer Objects):** Classes auxiliares para transferir dados customizados e formatar respostas seguras para a API (ex: o Histórico Escolar). Localizadas em `br.com.alunoonline.api.dtos`.
+### Stack Tecnológica:
+- **Linguagem:** Java 21
+- **Framework:** Spring Boot (Data JPA, WebMvc, Security)
+- **Banco de Dados:** MySQL 8.x
+- **Versionamento de BD:** Flyway (`V1__create_initial_tables.sql` e `V2__create_users_table.sql`)
+- **Autenticação & Autorização:** Spring Security + JWT (`com.auth0:java-jwt`)
+- **Documentação:** Springdoc OpenAPI 3 (Swagger UI com cadeado de segurança)
+- **Produtividade:** Lombok
 
 ---
 
-## 💻 3. Detalhamento do Código e Entidades
+## 🗄️ 3. Versionamento de Banco de Dados (Flyway)
 
-### A. Aluno (`Aluno.java`)
-Mapeia a tabela `aluno` no banco de dados.
-*   `id` (Long, Chave Primária, Autoincremento)
-*   `nome` (String): Nome completo do estudante.
-*   `cpf` (String): CPF para fins cadastrais.
-*   `email` (String): Endereço eletrônico de contato.
+O gerenciamento de esquema DDL foi completamente migrado do Hibernate (`ddl-auto=validate`) para o **Flyway**:
 
-### B. Professor (`Professor.java`)
-Mapeia a tabela `professor` no banco de dados.
-*   `id` (Long, Chave Primária, Autoincremento)
-*   `nome` (String): Nome completo do docente.
-*   `cpf` (String): CPF do docente.
-*   `email` (String): E-mail corporativo.
-
-### C. Disciplina (`Disciplina.java`)
-Mapeia a tabela `disciplina`. Possui um relacionamento **Muitos-para-Um (`@ManyToOne`)** com a entidade Professor.
-*   `id` (Long, Chave Primária, Autoincremento)
-*   `nome` (String): Nome da matéria.
-*   `cargaHoraria` (Integer): Quantidade de horas da matéria.
-*   `professor` (Professor): Instância do docente responsável. Mapeado no banco como a chave estrangeira `professor_id`.
-
-### D. Matrícula (`MatriculaAluno.java` & `MatriculaAlunoStatusEnum.java`)
-Intermedia a relação entre Aluno e Disciplina. Possui relacionamentos **Muitos-para-Um (`@ManyToOne`)** com ambas as entidades.
-*   `id` (Long, Chave Primária, Autoincremento)
-*   `aluno` (Aluno): Aluno matriculado (`aluno_id`).
-*   `disciplina` (Disciplina): Disciplina vinculada (`disciplina_id`).
-*   `nota1` (Double): Primeira nota avaliativa.
-*   `nota2` (Double): Segunda nota avaliativa.
-*   `status` (MatriculaAlunoStatusEnum): Pode assumir quatro estados:
-    *   `MATRICULADO`: Status inicial automático ao efetuar a matrícula.
-    *   `TRANCADO`: Definido ao trancar a matrícula (não permite notas).
-    *   `APROVADO`: Definido automaticamente se a média `(nota1 + nota2) / 2` for $\ge 7.0$.
-    *   `REPROVADO`: Definido automaticamente se a média `(nota1 + nota2) / 2` for $< 7.0$.
+1. **`V1__create_initial_tables.sql`**:
+   - Cria as tabelas `aluno`, `professor`, `disciplina` e `matricula_aluno` com chaves primárias autoincrementais, tipos compatíveis e constraints de chave estrangeira.
+2. **`V2__create_users_table.sql`**:
+   - Cria a tabela `users` com `id`, `login` (único), `password` (hash BCrypt) e `role` (`ADMIN` ou `USER`).
 
 ---
 
-## 📈 4. Regras de Negócio e Métodos de Matrícula
+## 🔐 4. Autenticação e Segurança (Spring Security + JWT)
 
-A classe `MatriculaAlunoService` implementa as principais regras acadêmicas da instituição:
-
-*   **Matricular Aluno (`criarMatricula`)**: Cria o vínculo entre um aluno e uma disciplina. Define por padrão o status inicial como `MATRICULADO`. Valida a existência prévia de ambos no banco de dados.
-*   **Trancar Matrícula (`trancarMatricula`)**: Altera o status de uma matrícula específica para `TRANCADO`. Apenas matrículas que estão com o status ativo (`MATRICULADO`) podem ser trancadas. Caso contrário, gera um erro HTTP 400 (Bad Request).
-*   **Atualizar Notas (`atualizarNotas`)**: Permite o lançamento parcial de notas (`nota1` ou `nota2`). Se **ambas** as notas forem preenchidas, o sistema calcula a média aritmética e altera de forma automática o status para `APROVADO` (média $\ge 7.0$) ou `REPROVADO` (média $< 7.0$).
-*   **Emitir Histórico Escolar (`emitirHistorico`)**: Gera uma estrutura detalhada contendo informações básicas do aluno e um histórico completo das disciplinas que ele cursa ou cursou, com notas, média final calculada em tempo de execução e a situação da disciplina.
-
----
-
-## 📡 5. Requisições (Insomnia / Postman)
-POST PROFESSOR :
-
-<img width="1908" height="1080" alt="image" src="https://github.com/user-attachments/assets/368ec0ac-f12a-44e0-8257-4236bf6c8f3a" />
-
-
-POST ALUNO :
-
-<img width="1912" height="1080" alt="image" src="https://github.com/user-attachments/assets/1c4ccb94-a4d2-458d-82f7-8f7301fb3a1f" />
-
-POST DISCIPLINA :
-
-<img width="1921" height="1037" alt="image" src="https://github.com/user-attachments/assets/cd80ea89-b235-4677-810b-a6a319d4fd39" />
-
-
-POST MATRICULA : 
-
-<img width="1914" height="1040" alt="image" src="https://github.com/user-attachments/assets/7c58a11f-b8ed-4467-a0ad-910be8ecc6b6" />
-
-PATCH NOTA :
-
-<img width="1902" height="978" alt="image" src="https://github.com/user-attachments/assets/08005d1d-46bf-4dc3-939d-ab111127b0b1" />
-
-GET HISTORICO:
-
-<img width="1917" height="1048" alt="image" src="https://github.com/user-attachments/assets/313dc833-ed4e-45bf-a164-a97d34e37eae" />
-
-
+A API utiliza autenticação **Stateless** via tokens **JWT**:
+* **Endpoints Públicos:**
+  * `POST /auth/register`: Cadastra um usuário com senha criptografada via `BCryptPasswordEncoder`.
+  * `POST /auth/login`: Autentica credenciais e retorna o token JWT assinado.
+  * `/v3/api-docs/**` e `/swagger-ui/**`: Documentação do Swagger aberta para visualização.
+* **Endpoints Protegidos:**
+  * Todas as operações de `/alunos/**`, `/professores/**`, `/disciplinas/**` e `/matriculas/**` exigem o cabeçalho:
+    `Authorization: Bearer <TOKEN_JWT>`
+  * O `SecurityFilter` intercepta cada requisição, valida a assinatura e o tempo de expiração do JWT e injeta a autenticação no contexto do Spring Security (`SecurityContextHolder`).
 
 ---
 
-## 🗄️ 6. Tabelas do Banco de Dados no DBeaver (Visualização Conceitual)
+## 📑 5. Documentação Interativa com Swagger / OpenAPI
 
-Graças ao Hibernate configurado com `ddl-auto=update`, as tabelas são criadas automaticamente no PostgreSQL. Abaixo estão representados os dados utilizados para testes conforme visualizados nas tabelas através do **DBeaver**:
+Acesse o Swagger UI em:
+```
+http://localhost:8080/swagger-ui.html
+```
 
-### Tabela: `aluno`
-| id (PK) | nome                    | cpf            | email                 |
-|:--------|:------------------------|:---------------|:----------------------|
-| 1       | Artur Medeiros          | 123.456.789-00 | artur@email.com       |
-| 2       | Maria Silva Oliveira    | 111.222.333-44 | maria.silva@email.com |
+### Como Utilizar o Botão Authorize (Cadeado):
+1. Acesse o Swagger UI.
+2. Localize o endpoint **`POST /auth/register`** e registre um novo usuário:
+   ```json
+   {
+     "login": "admin",
+     "password": "123",
+     "role": "ADMIN"
+   }
+   ```
+3. Execute o endpoint **`POST /auth/login`**:
+   ```json
+   {
+     "login": "admin",
+     "password": "123"
+   }
+   ```
+4. Copie o token retornado no campo `token`.
+5. Clique no botão verde **Authorize** (ou no ícone de cadeado de qualquer rota):
+   - Cole o token no campo **Value**.
+   - Clique em **Authorize** e feche a janela modal.
+6. Todos os endpoints protegidos agora exibirão o cadeado fechado e responderão normalmente às requisições (`200 OK`, `201 CREATED`, etc.). Sem o token, as rotas protegidas retornam `403 Forbidden`.
 
-### Tabela: `professor`
-| id (PK) | nome           | cpf            | email                        |
-|:--------|:---------------|:---------------|:-----------------------------|
-| 1       | Kelson Almeida | 987.654.321-11 | kelson.almeida@uniesp.edu.br |
+---
 
-### Tabela: `disciplina`
-| id (PK) | nome                                 | carga_horaria | professor_id (FK) |
-|:--------|:-------------------------------------|:--------------|:------------------|
-| 1       | Desenvolvimento Web com Spring Boot  | 80            | 1                 |
-| 2       | Estrutura de Dados em Java           | 60            | 1                 |
+## ⚙️ 6. Configuração e Execução
 
-### Tabela: `matricula_aluno`
-| id (PK) | aluno_id (FK) | disciplina_id (FK) | nota1 | nota2 | status       |
-|:--------|:--------------|:-------------------|:------|:------|:-------------|
-| 1       | 1             | 1                  | 8.5   | 7.5   | APROVADO     |
-| 2       | 1             | 2                  | NULL  | NULL  | MATRICULADO  |
-| 3       | 2             | 1                  | 4.0   | 5.0   | REPROVADO    |
+### Pré-requisitos:
+- Java JDK 21+ instalado
+- MySQL Server rodando (porta padrão 3306)
+
+### Configuração do Banco (`application.properties`):
+Você pode configurar as variáveis de ambiente ou rodar diretamente com as credenciais padrão:
+```properties
+spring.datasource.url=${DB_URL:jdbc:mysql://localhost:3306/alunoonline?createDatabaseIfNotExist=true&useSSL=false&serverTimezone=UTC&allowPublicKeyRetrieval=true}
+spring.datasource.username=${DB_USERNAME:root}
+spring.datasource.password=${DB_PASSWORD:root}
+```
+
+### Como Iniciar a Aplicação:
+No terminal, na raiz do projeto:
+```bash
+./mvnw spring-boot:run
+```
+Ou no Windows (cmd / PowerShell):
+```cmd
+mvnw.cmd spring-boot:run
+```
+Ao iniciar:
+1. O Flyway detectará o banco MySQL e executará automaticamente as migrações `V1` e `V2`.
+2. A API subirá na porta `8080`.
+3. Abra `http://localhost:8080/swagger-ui.html` para testar.

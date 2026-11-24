@@ -2,6 +2,9 @@ package br.com.alunoonline.api.controller;
 
 import br.com.alunoonline.api.model.Disciplina;
 import br.com.alunoonline.api.service.DisciplinaService;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.security.SecurityRequirement;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import java.util.List;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
@@ -17,6 +20,8 @@ import org.springframework.web.bind.annotation.RestController;
 
 @RestController
 @RequestMapping("/disciplinas")
+@Tag(name = "4. Disciplinas", description = "Endpoints protegidos para gerenciamento de disciplinas")
+@SecurityRequirement(name = "bearer-key")
 public class DisciplinaController {
 
     @Autowired
@@ -24,30 +29,35 @@ public class DisciplinaController {
 
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
+    @Operation(summary = "Criar nova disciplina")
     public Disciplina criar(@RequestBody Disciplina disciplina) {
         return service.criar(disciplina);
     }
 
     @GetMapping
     @ResponseStatus(HttpStatus.OK)
+    @Operation(summary = "Listar todas as disciplinas")
     public List<Disciplina> listarTodos() {
         return service.listarTodos();
     }
 
     @GetMapping("/{id}")
     @ResponseStatus(HttpStatus.OK)
+    @Operation(summary = "Buscar disciplina por ID")
     public Disciplina buscarPorId(@PathVariable Long id) {
         return service.buscarPorId(id);
     }
 
     @PutMapping("/{id}")
     @ResponseStatus(HttpStatus.OK)
+    @Operation(summary = "Atualizar disciplina por ID")
     public Disciplina atualizar(@PathVariable Long id, @RequestBody Disciplina disciplina) {
         return service.atualizar(id, disciplina);
     }
 
     @DeleteMapping("/{id}")
     @ResponseStatus(HttpStatus.NO_CONTENT)
+    @Operation(summary = "Deletar disciplina por ID")
     public void deletar(@PathVariable Long id) {
         service.deletar(id);
     }

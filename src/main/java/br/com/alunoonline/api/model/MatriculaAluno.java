@@ -1,5 +1,6 @@
 package br.com.alunoonline.api.model;
 
+import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
 import jakarta.persistence.Enumerated;
@@ -22,6 +23,7 @@ public class MatriculaAluno {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @Schema(description = "Identificador único", accessMode = Schema.AccessMode.READ_ONLY)
     private Long id;
 
     @ManyToOne
@@ -32,9 +34,13 @@ public class MatriculaAluno {
     @JoinColumn(name = "disciplina_id")
     private Disciplina disciplina;
 
+    @Schema(description = "Nota 1", example = "8.5")
     private Double nota1;
+
+    @Schema(description = "Nota 2", example = "9.0")
     private Double nota2;
 
     @Enumerated(EnumType.STRING)
+    @Schema(description = "Status da matrícula", example = "MATRICULADO")
     private MatriculaAlunoStatusEnum status;
 }
